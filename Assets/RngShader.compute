@@ -1,0 +1,41 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<int> Result;
+
+uint ResolutionX;
+uint ResolutionY;
+float time;
+
+uint hash(uint state)
+{
+	state ^= 2747636419u;
+	state *= 2654435769u;
+	state ^= state >> 16;
+	state *= 2654435769u;
+	state ^= state >> 16;
+	state *= 2654435769u;
+	return state;
+}
+
+float scaleToRange01(uint state)
+{
+	return state / 4294967295.0;
+}
+
+float random(float2 uv)
+{
+	return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453123);
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	int index = id.x + id.y * ResolutionX;
+	float color = scaleToRange01(hash(id.y * ResolutionX + id.x + hash(id.x + id.y + time)));
+	if (color > 0.5) {
+		Result[index] = 1;
+	}
+	else {
+		Result[index] = 0;
+	}
+}
